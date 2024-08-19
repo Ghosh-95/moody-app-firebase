@@ -41,7 +41,22 @@
                 </button>
             </nav>
 
-            <img src="assets/gifs/jerryandthebird.gif">
+            <div class="app-container">
+                <div class="user-section">
+                    <img alt="profile picture image" id="user-profile-picture">
+                    <h2 id="user-greet"></h2>
+                </div>
+
+                <div class="profile-update-section">
+                    <form action="" id="profile-update-form" class="hide">
+                        <input type="text" id="display-name-input" placeholder="name">
+                        <input id="photo-url-input" type="text" placeholder="paste photo url here">
+                        <button class="primary-btn" id="update-profile-btn">Apply</button>
+                    </form>
+
+                    <button id="toggle-update-form-btn" class="up-btn">Update Profile</button>
+                </div>
+            </div>
         </div>
     </section>
 

@@ -39,7 +39,8 @@ body {
 
 /* === Typography === */
 
-h1 {
+h1,
+h2 {
     margin: 0;
 }
 
@@ -96,6 +97,45 @@ section {
 
 #logged-out-view .container {
     gap: 2em;
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.user-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.user-section img {
+    height: 3.75rem;
+    width: 3.75rem;
+    border-radius: 100%;
+    border: var(--border-width) solid var(--dark-color);
+}
+
+.profile-update-section {
+    width: 100%;
+}
+
+#profile-update-form.hide {
+    display: none;
+}
+
+#profile-update-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+}
+
+#toggle-update-form-btn {
+    margin-top: 1.2rem;
 }
 
 /* === Common for elements === */
@@ -202,4 +242,8 @@ button:hover {
 #logged-in-view {
     display: none;
     margin: 0;
+}
+
+.hide {
+    display: none;
 }
