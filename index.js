@@ -1,6 +1,7 @@
 // imports
 import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, updateProfile } from "firebase/auth";
+import { getFirestore, collection, addDoc } from "firebase/firestore";
 import { firebaseConfig } from "./firebase-config";
 
 // Initialize Firebase
@@ -10,6 +11,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 const provider = new GoogleAuthProvider();
+
+// Initialize could firestore
+const db = getFirestore(app);
 
 /* === UI === */
 
@@ -38,6 +42,9 @@ const updateProfileButtonEl = document.getElementById("update-profile-btn");
 
 const toggleUpdateFormButtonEl = document.getElementById("toggle-update-form-btn");
 
+const postButtonEl = document.getElementById("post-btn");
+const textareaEl = document.getElementById("text-input");
+
 /* == UI - Event Listeners == */
 
 toggleUpdateFormButtonEl.addEventListener("click", toggleUpdateProfileForm);
@@ -50,6 +57,8 @@ createAccountButtonEl.addEventListener("click", authCreateAccountWithEmailAndPas
 signOutButtonEl.addEventListener("click", authSignOut);
 
 updateProfileButtonEl.addEventListener("click", authUpdateProfile);
+
+postButtonEl.addEventListener("click", handlePostButton);
 
 // variables
 
@@ -137,6 +146,17 @@ function authUpdateProfile(e) {
 
 };
 
+async function addPostToDB(postBody) {
+    try {
+        const docRef = await addDoc(collection(db, "posts"), { body: postBody });
+
+        console.log("Document written with document ID:", docRef.id);
+
+    } catch (err) {
+        console.error("Error adding document:", err);
+    }
+}
+
 /* == Functions - UI Functions == */
 
 function showLoggedOutView() {
@@ -194,4 +214,13 @@ function showUserGreeting(elem, user) {
 function toggleUpdateProfileForm(e) {
     profielUpdateFormEl.classList.remove("hide");
     e.target.classList.add("hide");
+};
+
+function handlePostButton() {
+    const postBody = textareaEl.value;
+
+    if (postBody) {
+        addPostToDB(postBody);
+        clearInputField(textareaEl);
+    }
 }
