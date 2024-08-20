@@ -282,11 +282,11 @@ function returnValueFromElementID(elementId) {
     return Number(elementId.slice(5));
 };
 
+// fetch and render posts
+
 function clearAll(elem) {
     elem.innerHTML = "";
 }
-
-// fetch and render posts
 function displayDate(dateString) {
     const date = dateString.toDate();
 
@@ -324,7 +324,13 @@ function resetPost(postsEl, postData) {
                 <h3>${displayDate(postData.createdAt)}</h3>
                 <img src="assets/emojis/${postData.moodState}.png" alt="mood emoji">
             </header>
-            <p>${postData.body}</p>
+            <p>${replaceInlineWithBrTags(postData.body)}</p>
         </div>
     `;
 }
+
+function replaceInlineWithBrTags(inputString) {
+    const replacedString = inputString.replace(/\n/g, "<br/>");
+
+    return replacedString;
+};
