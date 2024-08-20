@@ -1,7 +1,7 @@
 // imports
 import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, updateProfile } from "firebase/auth";
-import { getFirestore, collection, addDoc, serverTimestamp, getDocs, doc } from "firebase/firestore";
+import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
 import { firebaseConfig } from "./firebase-config";
 
 // Initialize Firebase
@@ -44,7 +44,6 @@ const toggleUpdateFormButtonEl = document.getElementById("toggle-update-form-btn
 
 const postButtonEl = document.getElementById("post-btn");
 const textareaEl = document.getElementById("text-input");
-const fetchPostButtonEl = document.getElementById("fetch-posts-btn");
 
 const moodEmojiElements = document.getElementsByClassName("mood-emoji-btn");
 
@@ -70,10 +69,11 @@ for (const moodButtons of moodEmojiElements) {
     moodButtons.addEventListener("click", handleSelectMood);
 }
 
-fetchPostButtonEl.addEventListener('click', fetchAndRenderPostsFromDB);
-
 // State
 let moodState = 0;
+
+// Global variables
+const collectionName = "posts";
 
 /* === Main Code === */
 onAuthStateChanged(auth, user => {
@@ -81,6 +81,7 @@ onAuthStateChanged(auth, user => {
         showLoggedInView();
         showProfilePicture(userProfilePictureEl, user);
         showUserGreeting(userGreetingEl, user);
+        fetchInRealtimeAndRenderPostsFromDB();
     } else {
         showLoggedOutView();
     }
@@ -161,7 +162,7 @@ function authUpdateProfile(e) {
 
 async function addPostToDB(postBody, user) {
     try {
-        const docRef = await addDoc(collection(db, "posts"), {
+        const docRef = await addDoc(collection(db, collectionName), {
             body: postBody,
             uid: user.uid,
             createdAt: serverTimestamp(),
@@ -287,8 +288,9 @@ function returnValueFromElementID(elementId) {
 function clearAll(elem) {
     elem.innerHTML = "";
 }
-function displayDate(dateString) {
-    const date = dateString.toDate();
+function displayDate(firestoreTimestamp) {
+    if (!firestoreTimestamp) return "processing...";
+    const date = firestoreTimestamp.toDate();
 
     const year = date.getFullYear();
     const day = date.getDate();
@@ -305,16 +307,15 @@ function displayDate(dateString) {
     return `${day} ${month}, ${year} - ${hours}:${minutes}`;
 };
 
-async function fetchAndRenderPostsFromDB() {
-    const queryPosts = await getDocs(collection(db, "posts"));
+function fetchInRealtimeAndRenderPostsFromDB() {
+    onSnapshot(collection(db, collectionName), (querySnapshot) => {
+        clearAll(postsEl);
 
-    // clearing the HTML before fetching more
-    clearAll(postsEl);
-
-    queryPosts.forEach(doc => {
-        resetPost(postsEl, doc.data());
+        querySnapshot.forEach(doc => {
+            resetPost(postsEl, doc.data());
+        })
     });
-};
+}
 
 function resetPost(postsEl, postData) {
 
