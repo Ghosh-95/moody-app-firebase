@@ -1,7 +1,7 @@
 // imports
 import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, updateProfile } from "firebase/auth";
-import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { getFirestore, collection, addDoc, serverTimestamp, getDocs, doc } from "firebase/firestore";
 import { firebaseConfig } from "./firebase-config";
 
 // Initialize Firebase
@@ -44,8 +44,11 @@ const toggleUpdateFormButtonEl = document.getElementById("toggle-update-form-btn
 
 const postButtonEl = document.getElementById("post-btn");
 const textareaEl = document.getElementById("text-input");
+const fetchPostButtonEl = document.getElementById("fetch-posts-btn");
 
 const moodEmojiElements = document.getElementsByClassName("mood-emoji-btn");
+
+const postsEl = document.getElementById("display-posts");
 
 /* == UI - Event Listeners == */
 
@@ -62,9 +65,12 @@ updateProfileButtonEl.addEventListener("click", authUpdateProfile);
 
 postButtonEl.addEventListener("click", handlePostButton);
 
+// loop and add event listener
 for (const moodButtons of moodEmojiElements) {
     moodButtons.addEventListener("click", handleSelectMood);
 }
+
+fetchPostButtonEl.addEventListener('click', fetchAndRenderPostsFromDB);
 
 // State
 let moodState = 0;
@@ -275,3 +281,50 @@ function resetAllMoodElements(allMoodElements) {
 function returnValueFromElementID(elementId) {
     return Number(elementId.slice(5));
 };
+
+function clearAll(elem) {
+    elem.innerHTML = "";
+}
+
+// fetch and render posts
+function displayDate(dateString) {
+    const date = dateString.toDate();
+
+    const year = date.getFullYear();
+    const day = date.getDate();
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = monthNames[date.getMonth()];
+
+    let hours = date.getHours();
+    let minutes = date.getMinutes();
+
+    hours = hours < 10 ? "0" + hours : hours;
+    minutes = minutes < 10 ? "0" + minutes : minutes;
+
+    return `${day} ${month}, ${year} - ${hours}:${minutes}`;
+};
+
+async function fetchAndRenderPostsFromDB() {
+    const queryPosts = await getDocs(collection(db, "posts"));
+
+    // clearing the HTML before fetching more
+    clearAll(postsEl);
+
+    queryPosts.forEach(doc => {
+        resetPost(postsEl, doc.data());
+    });
+};
+
+function resetPost(postsEl, postData) {
+
+    postsEl.innerHTML += `
+        <div class="post">
+            <header class="header">
+                <h3>${displayDate(postData.createdAt)}</h3>
+                <img src="assets/emojis/${postData.moodState}.png" alt="mood emoji">
+            </header>
+            <p>${postData.body}</p>
+        </div>
+    `;
+}
