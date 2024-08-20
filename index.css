@@ -40,8 +40,15 @@ body {
 /* === Typography === */
 
 h1,
-h2 {
+h2,
+h3,
+p {
     margin: 0;
+}
+
+h2,
+h3 {
+    font-weight: 500;
 }
 
 .app-title {
@@ -138,6 +145,80 @@ section {
 
 #toggle-update-form-btn {
     margin-top: 1.2rem;
+}
+
+/* Mood emoji section */
+.mood-emoji-section {
+    display: flex;
+}
+
+.mood-emoji-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3em;
+    font-size: 0.8em;
+    background: transparent;
+    border: 0;
+    transition: 0.2s all ease-in-out;
+}
+
+.mood-emoji-btn img {
+    width: 3.1em;
+    height: 3.1em;
+}
+
+.mood-emoji-btn:hover {
+    transform: scale(1.2);
+}
+
+.selected-emoji {
+    transform: scale(1.2);
+    opacity: 1;
+}
+
+.unselected-emoji {
+    transform: scale(1);
+    opacity: 0.5;
+}
+
+/* Display posts section */
+
+.display-post-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    margin-bottom: 1.8em;
+    width: 100%;
+}
+
+.post {
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--element-border-radius);
+    background-color: var(--secondary-color);
+    padding: 0.8em;
+}
+
+.post .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5em;
+}
+
+.post .header h3 {
+    font-size: 1em;
+}
+
+.post .header img {
+    width: 1.5em;
+    height: 1.5em;
+}
+
+.post p {
+    font-size: 0.9em;
+    line-height: 1.3em;
 }
 
 /* === Common for elements === */

@@ -1,7 +1,7 @@
 // imports
 import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, updateProfile } from "firebase/auth";
-import { getFirestore, collection, addDoc } from "firebase/firestore";
+import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { firebaseConfig } from "./firebase-config";
 
 // Initialize Firebase
@@ -45,6 +45,8 @@ const toggleUpdateFormButtonEl = document.getElementById("toggle-update-form-btn
 const postButtonEl = document.getElementById("post-btn");
 const textareaEl = document.getElementById("text-input");
 
+const moodEmojiElements = document.getElementsByClassName("mood-emoji-btn");
+
 /* == UI - Event Listeners == */
 
 toggleUpdateFormButtonEl.addEventListener("click", toggleUpdateProfileForm);
@@ -60,7 +62,12 @@ updateProfileButtonEl.addEventListener("click", authUpdateProfile);
 
 postButtonEl.addEventListener("click", handlePostButton);
 
-// variables
+for (const moodButtons of moodEmojiElements) {
+    moodButtons.addEventListener("click", handleSelectMood);
+}
+
+// State
+let moodState = 0;
 
 /* === Main Code === */
 onAuthStateChanged(auth, user => {
@@ -146,9 +153,14 @@ function authUpdateProfile(e) {
 
 };
 
-async function addPostToDB(postBody) {
+async function addPostToDB(postBody, user) {
     try {
-        const docRef = await addDoc(collection(db, "posts"), { body: postBody });
+        const docRef = await addDoc(collection(db, "posts"), {
+            body: postBody,
+            uid: user.uid,
+            createdAt: serverTimestamp(),
+            moodState
+        });
 
         console.log("Document written with document ID:", docRef.id);
 
@@ -218,9 +230,48 @@ function toggleUpdateProfileForm(e) {
 
 function handlePostButton() {
     const postBody = textareaEl.value;
+    const user = auth.currentUser
 
-    if (postBody) {
-        addPostToDB(postBody);
+    if (postBody && moodState) {
+        addPostToDB(postBody, user);
         clearInputField(textareaEl);
+        resetAllMoodElements(moodEmojiElements);
+    } else {
+        console.log("Please choose a mood and write something in the post");
     }
+};
+
+// mood operation functions
+function handleSelectMood(e) {
+    const selectMoodEmojiElementID = e.currentTarget.id;
+    changeMoodStyleAfterSelection(selectMoodEmojiElementID);
+
+    const choosenMoodValue = returnValueFromElementID(selectMoodEmojiElementID);
+
+    moodState = choosenMoodValue;
+};
+
+function changeMoodStyleAfterSelection(selectedMoodElementId) {
+    for (const moodElements of moodEmojiElements) {
+        if (moodElements.id === selectedMoodElementId) {
+            moodElements.classList.remove("unselected-emoji");
+            moodElements.classList.add("selected-emoji");
+        } else {
+            moodElements.classList.remove("selected-emoji");
+            moodElements.classList.add("unselected-emoji");
+        }
+    };
+};
+
+function resetAllMoodElements(allMoodElements) {
+    for (const moodElement of allMoodElements) {
+        moodElement.classList.remove("selected-emoji");
+        moodElement.classList.remove("unselected-emoji");
+    };
+
+    moodState = 5;
 }
+
+function returnValueFromElementID(elementId) {
+    return Number(elementId.slice(5));
+};
