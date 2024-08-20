@@ -1,7 +1,7 @@
 // imports
 import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, updateProfile } from "firebase/auth";
-import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
+import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, query, where } from "firebase/firestore";
 import { firebaseConfig } from "./firebase-config";
 
 // Initialize Firebase
@@ -81,7 +81,7 @@ onAuthStateChanged(auth, user => {
         showLoggedInView();
         showProfilePicture(userProfilePictureEl, user);
         showUserGreeting(userGreetingEl, user);
-        fetchInRealtimeAndRenderPostsFromDB();
+        fetchInRealtimeAndRenderPostsFromDB(user);
     } else {
         showLoggedOutView();
     }
@@ -212,6 +212,8 @@ function clearUpdateInput() {
 
 function showProfilePicture(fieldElement, user) {
     const photoURL = user.photoURL;
+    console.log(user);
+
 
     if (photoURL) {
         fieldElement.src = photoURL;
@@ -288,6 +290,7 @@ function returnValueFromElementID(elementId) {
 function clearAll(elem) {
     elem.innerHTML = "";
 }
+
 function displayDate(firestoreTimestamp) {
     if (!firestoreTimestamp) return "processing...";
     const date = firestoreTimestamp.toDate();
@@ -307,8 +310,14 @@ function displayDate(firestoreTimestamp) {
     return `${day} ${month}, ${year} - ${hours}:${minutes}`;
 };
 
-function fetchInRealtimeAndRenderPostsFromDB() {
-    onSnapshot(collection(db, collectionName), (querySnapshot) => {
+function fetchInRealtimeAndRenderPostsFromDB(user) {
+    const postRef = collection(db, collectionName);
+
+    // create a query against the collection
+    const q = query(postRef, where("uid", "==", user.uid));
+
+    // use that query as ref on onSnapshot
+    onSnapshot(q, (querySnapshot) => {
         clearAll(postsEl);
 
         querySnapshot.forEach(doc => {
