@@ -1,7 +1,7 @@
 // imports
 import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, updateProfile } from "firebase/auth";
-import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, query, where } from "firebase/firestore";
+import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, query, where, orderBy } from "firebase/firestore";
 import { firebaseConfig } from "./firebase-config";
 
 // Initialize Firebase
@@ -49,6 +49,9 @@ const moodEmojiElements = document.getElementsByClassName("mood-emoji-btn");
 
 const postsEl = document.getElementById("display-posts");
 
+const filterButtonEls = document.getElementsByClassName("filter-btn");
+const allFilterButtonEl = document.getElementById("all-filter-btn");
+
 /* == UI - Event Listeners == */
 
 toggleUpdateFormButtonEl.addEventListener("click", toggleUpdateProfileForm);
@@ -69,6 +72,10 @@ for (const moodButtons of moodEmojiElements) {
     moodButtons.addEventListener("click", handleSelectMood);
 }
 
+for (const fileterButton of filterButtonEls) {
+    fileterButton.addEventListener("click", selectFilterButton);
+}
+
 // State
 let moodState = 0;
 
@@ -81,7 +88,8 @@ onAuthStateChanged(auth, user => {
         showLoggedInView();
         showProfilePicture(userProfilePictureEl, user);
         showUserGreeting(userGreetingEl, user);
-        fetchInRealtimeAndRenderPostsFromDB(user);
+        styleOnFilterButtonSelect(allFilterButtonEl);
+        fetchAllPosts(user);
     } else {
         showLoggedOutView();
     }
@@ -287,6 +295,55 @@ function returnValueFromElementID(elementId) {
 
 // fetch and render posts
 
+function queryAndFetchForAPeriod(user, startPeriod) {
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const postRef = collection(db, collectionName);
+    const q = query(postRef, where("uid", "==", user.uid),
+        where("createdAt", ">=", startPeriod),
+        where("createdAt", "<=", endOfDay),
+        orderBy("createdAt", "desc"))
+
+    fetchInRealtimeAndRenderPostsFromDB(q);
+}
+
+function fetchTodayPost(user) {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    queryAndFetchForAPeriod(user, startOfDay);
+};
+
+function fetchWeekPost(user) {
+    const startOfWeek = new Date();
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    if (startOfWeek.getDay() === 0) { // if today is sunday
+        startOfWeek.setDate(startOfWeek.getDate() - 6); // go back to previous Monday
+    } else {
+        // set the start week as previous sunday
+        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1)
+    };
+
+    queryAndFetchForAPeriod(user, startOfWeek);
+};
+
+function fetchMonthPost(user) {
+    const startOfMonth = new Date();
+    startOfMonth.setHours(0, 0, 0, 0);
+    startOfMonth.setDate(1);
+
+    queryAndFetchForAPeriod(user, startOfMonth);
+};
+
+function fetchAllPosts(user) {
+    const q = query(collection(db, collectionName), where("uid", "==", user.uid),
+        orderBy("createdAt", "desc"));
+
+    fetchInRealtimeAndRenderPostsFromDB(q);
+}
+
 function clearAll(elem) {
     elem.innerHTML = "";
 }
@@ -310,14 +367,9 @@ function displayDate(firestoreTimestamp) {
     return `${day} ${month}, ${year} - ${hours}:${minutes}`;
 };
 
-function fetchInRealtimeAndRenderPostsFromDB(user) {
-    const postRef = collection(db, collectionName);
+function fetchInRealtimeAndRenderPostsFromDB(query) {
 
-    // create a query against the collection
-    const q = query(postRef, where("uid", "==", user.uid));
-
-    // use that query as ref on onSnapshot
-    onSnapshot(q, (querySnapshot) => {
+    onSnapshot(query, (querySnapshot) => {
         clearAll(postsEl);
 
         querySnapshot.forEach(doc => {
@@ -344,3 +396,37 @@ function replaceInlineWithBrTags(inputString) {
 
     return replacedString;
 };
+
+// filter buttons
+function resetAllFilterButtons(allFilterButtons) {
+    for (const filterButton of allFilterButtons) {
+        filterButton.classList.remove("selected-filter")
+    }
+};
+
+function styleOnFilterButtonSelect(element) {
+    element.classList.add("selected-filter");
+};
+
+function queryAndFetchFromSelectedPeriod(period, user) {
+    if (period === "today") fetchTodayPost(user);
+    if (period === "week") fetchWeekPost(user);
+    if (period === "month") fetchMonthPost(user);
+    if (period === "all") fetchAllPosts(user);
+};
+
+
+function selectFilterButton(e) {
+    const user = auth.currentUser;
+
+    const selectedFilterElementId = e.currentTarget.id;
+
+    const selectedElementPeriod = selectedFilterElementId.split("-")[0];
+
+    const selectedElement = document.getElementById(selectedFilterElementId);
+
+    resetAllFilterButtons(filterButtonEls);
+    styleOnFilterButtonSelect(selectedElement);
+
+    queryAndFetchFromSelectedPeriod(selectedElementPeriod, user);
+}
