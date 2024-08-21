@@ -380,22 +380,28 @@ function fetchInRealtimeAndRenderPostsFromDB(query) {
 
 function resetPost(postsEl, postData) {
 
-    postsEl.innerHTML += `
-        <div class="post">
-            <header class="header">
-                <h3>${displayDate(postData.createdAt)}</h3>
-                <img src="assets/emojis/${postData.moodState}.png" alt="mood emoji">
-            </header>
-            <p>${replaceInlineWithBrTags(postData.body)}</p>
-        </div>
-    `;
+    const postDiv = document.createElement('div');
+    postDiv.classList = "post";
+
+    const postDivHeader = document.createElement('header');
+    postDivHeader.className = "header";
+
+    const headerH3 = document.createElement('h3');
+    headerH3.textContent = `${displayDate(postData.createdAt)}`;
+
+    const headerImg = document.createElement("img");
+    headerImg.src = `assets/emojis/${postData.moodState}.png`;
+    headerImg.alt = "mood emoji";
+
+    const postBodyPara = document.createElement("p");
+    postBodyPara.innerText = `${postData.body}`;
+
+    postDivHeader.append(headerH3, headerImg);
+    postDiv.appendChild(postDivHeader);
+    postDiv.appendChild(postBodyPara);
+
+    postsEl.appendChild(postDiv);
 }
-
-function replaceInlineWithBrTags(inputString) {
-    const replacedString = inputString.replace(/\n/g, "<br/>");
-
-    return replacedString;
-};
 
 // filter buttons
 function resetAllFilterButtons(allFilterButtons) {
