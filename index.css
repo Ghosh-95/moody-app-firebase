@@ -251,6 +251,33 @@ section {
     background-color: var(--light-color);
 }
 
+.post .footer {
+    display: flex;
+    margin-top: 1em;
+    width: 35%;
+    gap: 0.8em;
+}
+
+.post .footer button {
+    font-size: 0.9em;
+    padding: 0.2em 0.8em;
+    box-shadow: 0px var(--small-button-height) 0px 0px var(--dark-color);
+    position: relative;
+}
+
+.post .footer button:hover {
+    top: var(--small-button-height);
+    box-shadow: none;
+}
+
+.post .footer .edit-color {
+    background-color: var(--post-color);
+}
+
+.post .footer .delete-color {
+    background-color: var(--delete-color);
+}
+
 /* === Common for elements === */
 
 input,

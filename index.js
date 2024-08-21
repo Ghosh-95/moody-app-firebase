@@ -1,7 +1,7 @@
 // imports
 import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, updateProfile } from "firebase/auth";
-import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, query, where, orderBy } from "firebase/firestore";
+import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, query, where, orderBy, updateDoc, doc, deleteDoc } from "firebase/firestore";
 import { firebaseConfig } from "./firebase-config";
 
 // Initialize Firebase
@@ -220,8 +220,6 @@ function clearUpdateInput() {
 
 function showProfilePicture(fieldElement, user) {
     const photoURL = user.photoURL;
-    console.log(user);
-
 
     if (photoURL) {
         fieldElement.src = photoURL;
@@ -373,12 +371,67 @@ function fetchInRealtimeAndRenderPostsFromDB(query) {
         clearAll(postsEl);
 
         querySnapshot.forEach(doc => {
-            resetPost(postsEl, doc.data());
+            resetPost(postsEl, doc);
         })
     });
+};
+
+async function updatePostInDB(postID, newPostBody) {
+    const updatePostRef = doc(db, collectionName, postID);
+
+    await updateDoc(updatePostRef, { body: newPostBody });
+};
+
+async function deletePostInDB(postID) {
+    const deleteRef = doc(db, collectionName, postID);
+
+    await deleteDoc(deleteRef);
 }
 
-function resetPost(postsEl, postData) {
+function createUpdateTextButton(wholeDoc) {
+    const postData = wholeDoc.data();
+    const postID = wholeDoc.id;
+
+    const button = document.createElement('button');
+    button.textContent = "Edit";
+    button.className = "edit-color";
+
+    button.addEventListener("click", function () {
+        const newPostBody = prompt('Edit this post', postData.body);
+
+        if (newPostBody) {
+            updatePostInDB(postID, newPostBody);
+        };
+    });
+
+    return button;
+};
+
+function createDeletePostButton(wholeDoc) {
+    const postID = wholeDoc.id;
+
+    const button = document.createElement('button');
+    button.textContent = "Delete";
+    button.className = "delete-color";
+    button.addEventListener("click", function () {
+        deletePostInDB(postID);
+    });
+
+    return button;
+}
+
+function createPostFooter(wholeDoc) {
+    const footerDiv = document.createElement("div");
+    footerDiv.className = 'footer';
+
+    footerDiv.appendChild(createUpdateTextButton(wholeDoc));
+    footerDiv.appendChild(createDeletePostButton(wholeDoc));
+
+    return footerDiv;
+}
+
+function resetPost(postsEl, wholeDoc) {
+    const postData = wholeDoc.data();
 
     const postDiv = document.createElement('div');
     postDiv.classList = "post";
@@ -399,6 +452,7 @@ function resetPost(postsEl, postData) {
     postDivHeader.append(headerH3, headerImg);
     postDiv.appendChild(postDivHeader);
     postDiv.appendChild(postBodyPara);
+    postDiv.appendChild(createPostFooter(wholeDoc));
 
     postsEl.appendChild(postDiv);
 }
