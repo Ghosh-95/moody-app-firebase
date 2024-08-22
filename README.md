@@ -1,4 +1,8 @@
-# Getting Started
+# Moody App [🔗](https://moody-post-firebase.netlify.app)
+
+A firebase based project with Vanilla JS. Used [firebase](https://firebase.google.com) for backend services.
+
+## Getting Started
 
 Install the dependencies and run the project
 
